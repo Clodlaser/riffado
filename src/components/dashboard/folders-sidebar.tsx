@@ -9,6 +9,11 @@ interface FolderType {
     id: string;
     name: string;
     color: string;
+    parentId?: string | null;
+}
+
+interface FolderNode extends FolderType {
+    children: FolderNode[];
 }
 
 interface FoldersSidebarProps {
@@ -18,12 +23,97 @@ interface FoldersSidebarProps {
     onManageFolders: () => void;
 }
 
+function buildFolderTree(foldersList: FolderType[]): FolderNode[] {
+    const nodesMap = new Map<string, FolderNode>();
+    const roots: FolderNode[] = [];
+
+    for (const f of foldersList) {
+        nodesMap.set(f.id, { ...f, children: [] });
+    }
+
+    for (const f of foldersList) {
+        const node = nodesMap.get(f.id);
+        if (!node) continue;
+        if (f.parentId) {
+            const parent = nodesMap.get(f.parentId);
+            if (parent) {
+                parent.children.push(node);
+            } else {
+                roots.push(node);
+            }
+        } else {
+            roots.push(node);
+        }
+    }
+
+    const sortNodes = (nodes: FolderNode[]) => {
+        nodes.sort((a, b) => a.name.localeCompare(b.name));
+        for (const n of nodes) {
+            sortNodes(n.children);
+        }
+    };
+    sortNodes(roots);
+
+    return roots;
+}
+
+function FolderItemNode({
+    node,
+    depth,
+    selectedFolderId,
+    onSelectFolder,
+}: {
+    node: FolderNode;
+    depth: number;
+    selectedFolderId: string;
+    onSelectFolder: (id: string) => void;
+}) {
+    return (
+        <div className="space-y-1">
+            <button
+                type="button"
+                onClick={() => onSelectFolder(node.id)}
+                className={cn(
+                    "w-full flex items-center gap-3 py-1.5 rounded-lg text-sm transition-colors text-left",
+                    selectedFolderId === node.id
+                        ? "bg-primary/10 text-primary font-semibold"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+                style={{ paddingLeft: `${12 + depth * 12}px` }}
+            >
+                <div
+                    className="size-2 rounded-full border border-black/10 dark:border-white/10 shrink-0"
+                    style={{
+                        backgroundColor: `hsl(${node.color})`,
+                    }}
+                />
+                <span className="truncate">{node.name}</span>
+            </button>
+            {node.children.length > 0 && (
+                <div className="space-y-1">
+                    {node.children.map((child) => (
+                        <FolderItemNode
+                            key={child.id}
+                            node={child}
+                            depth={depth + 1}
+                            selectedFolderId={selectedFolderId}
+                            onSelectFolder={onSelectFolder}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function FoldersSidebar({
     folders,
     selectedFolderId,
     onSelectFolder,
     onManageFolders,
 }: FoldersSidebarProps) {
+    const folderTree = buildFolderTree(folders);
+
     return (
         <Card className="h-full border bg-card text-card-foreground shadow-sm">
             <CardContent className="flex h-full flex-col gap-4 p-4">
@@ -62,6 +152,20 @@ export function FoldersSidebar({
                         <span>All Recordings</span>
                     </button>
 
+                    <button
+                        type="button"
+                        onClick={() => onSelectFolder("uncategorized")}
+                        className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-left",
+                            selectedFolderId === "uncategorized"
+                                ? "bg-primary/10 text-primary font-semibold"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        )}
+                    >
+                        <Folder className="size-4 text-muted-foreground/80" />
+                        <span>Uncategorized</span>
+                    </button>
+
                     <div className="py-2">
                         <p className="px-3 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-2">
                             Folders
@@ -72,30 +176,14 @@ export function FoldersSidebar({
                             </p>
                         ) : (
                             <div className="space-y-1">
-                                {folders.map((folder) => (
-                                    <button
-                                        key={folder.id}
-                                        type="button"
-                                        onClick={() =>
-                                            onSelectFolder(folder.id)
-                                        }
-                                        className={cn(
-                                            "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-left",
-                                            selectedFolderId === folder.id
-                                                ? "bg-primary/10 text-primary font-semibold"
-                                                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                                        )}
-                                    >
-                                        <div
-                                            className="size-2 rounded-full border border-black/10 dark:border-white/10 shrink-0"
-                                            style={{
-                                                backgroundColor: `hsl(${folder.color})`,
-                                            }}
-                                        />
-                                        <span className="truncate">
-                                            {folder.name}
-                                        </span>
-                                    </button>
+                                {folderTree.map((node) => (
+                                    <FolderItemNode
+                                        key={node.id}
+                                        node={node}
+                                        depth={0}
+                                        selectedFolderId={selectedFolderId}
+                                        onSelectFolder={onSelectFolder}
+                                    />
                                 ))}
                             </div>
                         )}

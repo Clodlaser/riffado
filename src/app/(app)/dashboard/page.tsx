@@ -105,6 +105,7 @@ export default async function DashboardPage() {
             id: folders.id,
             name: folders.name,
             color: folders.color,
+            parentId: folders.parentId,
             createdAt: folders.createdAt,
         })
         .from(folders)

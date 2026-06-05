@@ -176,6 +176,13 @@
       "when": 1780641053759,
       "tag": "0024_exotic_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1780642694955,
+      "tag": "0025_windy_spencer_smythe",
+      "breakpoints": true
     }
   ]
 }

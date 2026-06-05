@@ -17,6 +17,39 @@ interface FolderType {
     id: string;
     name: string;
     color: string;
+    parentId?: string | null;
+}
+
+function getFolderPath(folder: FolderType, allFolders: FolderType[]): string {
+    const parts: string[] = [folder.name];
+    let current = folder;
+    while (current.parentId) {
+        const parent = allFolders.find((f) => f.id === current.parentId);
+        if (!parent) break;
+        parts.unshift(parent.name);
+        current = parent;
+    }
+    return parts.join(" / ");
+}
+
+function getDescendants(
+    folderId: string,
+    allFolders: FolderType[],
+): Set<string> {
+    const descendants = new Set<string>();
+    const queue = [folderId];
+    while (queue.length > 0) {
+        const currentId = queue.shift();
+        if (!currentId) continue;
+        const children = allFolders.filter((f) => f.parentId === currentId);
+        for (const child of children) {
+            if (!descendants.has(child.id)) {
+                descendants.add(child.id);
+                queue.push(child.id);
+            }
+        }
+    }
+    return descendants;
 }
 
 interface ManageFoldersDialogProps {
@@ -46,18 +79,21 @@ export function ManageFoldersDialog({
     const [name, setName] = useState("");
     const [selectedColor, setSelectedColor] = useState(COLOR_SWATCHES[0].value);
     const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+    const [parentId, setParentId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSelectFolderForEdit = (folder: FolderType) => {
         setEditingFolderId(folder.id);
         setName(folder.name);
         setSelectedColor(folder.color);
+        setParentId(folder.parentId || null);
     };
 
     const handleCancelEdit = () => {
         setEditingFolderId(null);
         setName("");
         setSelectedColor(COLOR_SWATCHES[0].value);
+        setParentId(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -78,6 +114,7 @@ export function ManageFoldersDialog({
                     body: JSON.stringify({
                         name: trimmedName,
                         color: selectedColor,
+                        parentId,
                     }),
                 });
                 if (!res.ok) {
@@ -95,6 +132,7 @@ export function ManageFoldersDialog({
                     body: JSON.stringify({
                         name: trimmedName,
                         color: selectedColor,
+                        parentId,
                     }),
                 });
                 if (!res.ok) {
@@ -108,6 +146,7 @@ export function ManageFoldersDialog({
 
             setName("");
             setEditingFolderId(null);
+            setParentId(null);
             onComplete?.();
         } catch (err) {
             toast.error(
@@ -187,7 +226,7 @@ export function ManageFoldersDialog({
                                                 }}
                                             />
                                             <span className="font-medium text-sm truncate">
-                                                {f.name}
+                                                {getFolderPath(f, folders)}
                                             </span>
                                         </div>
                                         <div className="flex gap-1">
@@ -250,6 +289,48 @@ export function ManageFoldersDialog({
                                     maxLength={30}
                                     required
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label
+                                    htmlFor="parent-folder"
+                                    className="text-xs font-semibold"
+                                >
+                                    Parent Folder
+                                </Label>
+                                <select
+                                    id="parent-folder"
+                                    value={parentId || ""}
+                                    onChange={(e) =>
+                                        setParentId(e.target.value || null)
+                                    }
+                                    disabled={isSaving}
+                                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                >
+                                    <option value="">None (Root Folder)</option>
+                                    {(() => {
+                                        const excludedIds = editingFolderId
+                                            ? getDescendants(
+                                                  editingFolderId,
+                                                  folders,
+                                              )
+                                            : new Set<string>();
+                                        if (editingFolderId) {
+                                            excludedIds.add(editingFolderId);
+                                        }
+                                        const eligibleParents = folders.filter(
+                                            (f) => !excludedIds.has(f.id),
+                                        );
+                                        return eligibleParents.map((folder) => (
+                                            <option
+                                                key={folder.id}
+                                                value={folder.id}
+                                            >
+                                                {getFolderPath(folder, folders)}
+                                            </option>
+                                        ));
+                                    })()}
+                                </select>
                             </div>
 
                             <div className="space-y-2">

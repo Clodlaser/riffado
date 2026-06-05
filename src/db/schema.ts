@@ -1,4 +1,5 @@
 import {
+    type AnyPgColumn,
     boolean,
     date,
     index,
@@ -211,6 +212,9 @@ export const folders = pgTable(
         userId: text("user_id")
             .notNull()
             .references(() => users.id, { onDelete: "cascade" }),
+        parentId: text("parent_id").references((): AnyPgColumn => folders.id, {
+            onDelete: "cascade",
+        }),
         name: text("name").notNull(),
         color: varchar("color", { length: 50 })
             .notNull()
@@ -220,10 +224,9 @@ export const folders = pgTable(
     },
     (table) => ({
         userIdIdx: index("folders_user_id_idx").on(table.userId),
-        userFolderNameUnique: unique("folders_user_id_name_unique").on(
-            table.userId,
-            table.name,
-        ),
+        userFolderParentNameUnique: unique(
+            "folders_user_id_parent_id_name_unique",
+        ).on(table.userId, table.parentId, table.name),
     }),
 );
 

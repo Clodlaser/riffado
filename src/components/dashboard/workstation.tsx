@@ -52,6 +52,7 @@ interface FolderType {
     id: string;
     name: string;
     color: string;
+    parentId?: string | null;
 }
 
 interface WorkstationProps {
@@ -127,12 +128,40 @@ export function Workstation({
     const { theme, setTheme } = useTheme(initialSettings.theme);
     const listRef = useRef<RecordingListHandle>(null);
 
-    // Filter out optimistically-hidden (deleted) rows and filter by selected folder.
+    // Helper to recursively collect all child folder IDs
+    const getDescendantFolderIds = useCallback(
+        (folderId: string, allFolders: FolderType[]): string[] => {
+            const ids = [folderId];
+            const children = allFolders.filter((f) => f.parentId === folderId);
+            for (const child of children) {
+                ids.push(...getDescendantFolderIds(child.id, allFolders));
+            }
+            return ids;
+        },
+        [],
+    );
+
+    // Filter out optimistically-hidden (deleted) rows and filter by selected folder and its subfolders.
     const visibleRecordings = useMemo(() => {
         const visible = recordings.filter((r) => !hiddenIds.has(r.id));
         if (selectedFolderId === "all") return visible;
-        return visible.filter((r) => r.folderId === selectedFolderId);
-    }, [recordings, hiddenIds, selectedFolderId]);
+        if (selectedFolderId === "uncategorized") {
+            return visible.filter((r) => !r.folderId);
+        }
+        const activeFolderIds = getDescendantFolderIds(
+            selectedFolderId,
+            folders,
+        );
+        return visible.filter(
+            (r) => r.folderId && activeFolderIds.includes(r.folderId),
+        );
+    }, [
+        recordings,
+        hiddenIds,
+        selectedFolderId,
+        folders,
+        getDescendantFolderIds,
+    ]);
 
     const currentTranscription = currentRecording
         ? transcriptions.get(currentRecording.id)
