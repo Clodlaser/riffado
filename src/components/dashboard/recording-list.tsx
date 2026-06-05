@@ -42,6 +42,9 @@ interface RecordingListProps {
     currentRecording: Recording | null;
     pendingUploads: PendingUpload[];
     inFlightActions: Map<string, "transcribing" | "summarizing">;
+    folders?: { id: string; name: string; color: string }[];
+    selectedFolderId?: string;
+    onSelectFolder?: (id: string) => void;
     onSelect: (recording: Recording) => void;
     onDelete: (recording: Recording) => Promise<void>;
     initialDateTimeFormat: DateTimeFormat;
@@ -85,6 +88,9 @@ export function RecordingList({
     currentRecording,
     pendingUploads,
     inFlightActions,
+    folders = [],
+    selectedFolderId = "all",
+    onSelectFolder,
     onSelect,
     onDelete,
     initialDateTimeFormat,
@@ -261,6 +267,9 @@ export function RecordingList({
                     onSortOrderChange={setSortOrderPersisted}
                     density={density}
                     onDensityChange={setDensityPersisted}
+                    folders={folders}
+                    selectedFolderId={selectedFolderId}
+                    onSelectFolder={onSelectFolder}
                 />
 
                 {pendingUploads.length > 0 && (
@@ -286,29 +295,38 @@ export function RecordingList({
                                 </div>
                             )}
                             <div className="divide-y">
-                                {group.items.map((recording) => (
-                                    <RecordingRow
-                                        key={recording.id}
-                                        recording={recording}
-                                        isSelected={
-                                            currentRecording?.id ===
-                                            recording.id
-                                        }
-                                        inFlight={inFlightActions.get(
-                                            recording.id,
-                                        )}
-                                        snippet={transcriptSnippet(
-                                            transcriptions.get(recording.id)
-                                                ?.text,
-                                        )}
-                                        isCompact={isCompact}
-                                        rowPadding={rowPadding}
-                                        dateTimeFormat={dateTimeFormat}
-                                        onSelect={onSelect}
-                                        onDelete={onDelete}
-                                        registerRef={registerRowRef}
-                                    />
-                                ))}
+                                {group.items.map((recording) => {
+                                    const folder = recording.folderId
+                                        ? folders.find(
+                                              (f) =>
+                                                  f.id === recording.folderId,
+                                          )
+                                        : undefined;
+                                    return (
+                                        <RecordingRow
+                                            key={recording.id}
+                                            recording={recording}
+                                            isSelected={
+                                                currentRecording?.id ===
+                                                recording.id
+                                            }
+                                            inFlight={inFlightActions.get(
+                                                recording.id,
+                                            )}
+                                            snippet={transcriptSnippet(
+                                                transcriptions.get(recording.id)
+                                                    ?.text,
+                                            )}
+                                            isCompact={isCompact}
+                                            rowPadding={rowPadding}
+                                            dateTimeFormat={dateTimeFormat}
+                                            folder={folder}
+                                            onSelect={onSelect}
+                                            onDelete={onDelete}
+                                            registerRef={registerRowRef}
+                                        />
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}

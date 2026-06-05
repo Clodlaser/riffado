@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CommandPalette } from "@/components/dashboard/command-palette";
+import { FoldersSidebar } from "@/components/dashboard/folders-sidebar";
+import { ManageFoldersDialog } from "@/components/dashboard/manage-folders-dialog";
 import {
     RecordingList,
     type RecordingListHandle,
@@ -46,9 +48,16 @@ interface Provider {
 
 const EMPTY_PROVIDERS: Provider[] = [];
 
+interface FolderType {
+    id: string;
+    name: string;
+    color: string;
+}
+
 interface WorkstationProps {
     recordings: Recording[];
     transcriptions: Map<string, TranscriptionData>;
+    folders?: FolderType[];
     /**
      * When true, an admin shortcut appears in the avatar menu. Set by
      * the server-rendered page based on env.ADMIN_EMAILS membership;
@@ -92,6 +101,7 @@ interface WorkstationProps {
 export function Workstation({
     recordings,
     transcriptions,
+    folders = [],
     isAdmin = false,
     userEmail = null,
     initialSettings,
@@ -105,6 +115,8 @@ export function Workstation({
     const [onboardingOpen, setOnboardingOpen] = useState(false);
     const [paletteOpen, setPaletteOpen] = useState(false);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
+    const [manageFoldersOpen, setManageFoldersOpen] = useState(false);
+    const [selectedFolderId, setSelectedFolderId] = useState<string>("all");
     const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
     // On <lg viewports the list and detail panes can't coexist -- we
     // toggle between them instead of stacking. Desktop ignores this
@@ -115,11 +127,12 @@ export function Workstation({
     const { theme, setTheme } = useTheme(initialSettings.theme);
     const listRef = useRef<RecordingListHandle>(null);
 
-    // Filter out optimistically-hidden (deleted) rows.
-    const visibleRecordings = useMemo(
-        () => recordings.filter((r) => !hiddenIds.has(r.id)),
-        [recordings, hiddenIds],
-    );
+    // Filter out optimistically-hidden (deleted) rows and filter by selected folder.
+    const visibleRecordings = useMemo(() => {
+        const visible = recordings.filter((r) => !hiddenIds.has(r.id));
+        if (selectedFolderId === "all") return visible;
+        return visible.filter((r) => r.folderId === selectedFolderId);
+    }, [recordings, hiddenIds, selectedFolderId]);
 
     const currentTranscription = currentRecording
         ? transcriptions.get(currentRecording.id)
@@ -304,15 +317,26 @@ export function Workstation({
                         onOpenShortcuts={() => setShortcutsOpen(true)}
                     />
 
-                    {visibleRecordings.length === 0 &&
-                    pendingUploads.length === 0 ? (
+                    {recordings.length === 0 && pendingUploads.length === 0 ? (
                         <WorkstationEmptyState
                             isSyncing={isAutoSyncing}
                             onSync={handleSync}
                             onUpload={triggerUpload}
                         />
                     ) : (
-                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+                            {/* Desktop folders sidebar */}
+                            <div className="hidden lg:block lg:col-span-1">
+                                <FoldersSidebar
+                                    folders={folders}
+                                    selectedFolderId={selectedFolderId}
+                                    onSelectFolder={setSelectedFolderId}
+                                    onManageFolders={() =>
+                                        setManageFoldersOpen(true)
+                                    }
+                                />
+                            </div>
+
                             {/*
                               Mobile master/detail: on <lg, only one
                               pane renders at a time. `mobileView ===
@@ -336,6 +360,9 @@ export function Workstation({
                                     currentRecording={currentRecording}
                                     pendingUploads={pendingUploads}
                                     inFlightActions={inFlightActions}
+                                    folders={folders}
+                                    selectedFolderId={selectedFolderId}
+                                    onSelectFolder={setSelectedFolderId}
                                     onSelect={(r) => {
                                         setCurrentRecording(r);
                                         // Tapping a row on mobile
@@ -362,6 +389,8 @@ export function Workstation({
                                 currentTranscription={currentTranscription}
                                 isCurrentTranscribing={isCurrentTranscribing}
                                 visibleRecordings={visibleRecordings}
+                                folders={folders}
+                                onFolderChange={refresh}
                                 onTranscribe={handleTranscribe}
                                 onSelectRecording={setCurrentRecording}
                                 onBackToList={() => setMobileView("list")}
@@ -424,6 +453,13 @@ export function Workstation({
                     setOnboardingOpen(false);
                     refresh();
                 }}
+            />
+
+            <ManageFoldersDialog
+                open={manageFoldersOpen}
+                onOpenChange={setManageFoldersOpen}
+                folders={folders}
+                onComplete={refresh}
             />
         </>
     );

@@ -14,6 +14,8 @@ interface RecordingPlayerProps {
     initialPlaybackSpeed?: number;
     initialVolume?: number;
     initialAutoPlayNext?: boolean;
+    folders?: { id: string; name: string; color: string }[];
+    onFolderChange?: () => void;
     /**
      * Which scrubber style to render. `"slider"` forces the plain
      * progress bar even when waveform peaks are available; `"waveform"`
@@ -37,6 +39,8 @@ export function RecordingPlayer({
     initialVolume = 75,
     initialAutoPlayNext = false,
     scrubberStyle = "waveform",
+    folders = [],
+    onFolderChange,
 }: RecordingPlayerProps) {
     const {
         audioRef,
@@ -92,6 +96,8 @@ export function RecordingPlayer({
                 duration={duration}
                 scrubberStyle={scrubberStyle}
                 waveformStatus={waveformStatus}
+                folders={folders}
+                onFolderChange={onFolderChange}
                 onDecodeWaveform={triggerWaveformDecode}
             />
             <CardContent>

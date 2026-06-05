@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownAZ, Rows3, Search, X } from "lucide-react";
+import { ArrowDownAZ, Folder, Rows3, Search, X } from "lucide-react";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,9 @@ export function RecordingListToolbar({
     onSortOrderChange,
     density,
     onDensityChange,
+    folders = [],
+    selectedFolderId = "all",
+    onSelectFolder,
 }: {
     query: string;
     onQueryChange: (next: string) => void;
@@ -38,6 +41,9 @@ export function RecordingListToolbar({
     onSortOrderChange: (next: SortOrder) => void;
     density: ListDensity;
     onDensityChange: (next: ListDensity) => void;
+    folders?: { id: string; name: string; color: string }[];
+    selectedFolderId?: string;
+    onSelectFolder?: (id: string) => void;
 }) {
     return (
         <div className="flex flex-col gap-2 border-b p-3">
@@ -75,6 +81,53 @@ export function RecordingListToolbar({
                     {totalCount !== 1 ? "s" : ""}
                 </span>
                 <div className="flex items-center gap-1">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs lg:hidden"
+                                aria-label="Filter by folder"
+                            >
+                                <Folder className="size-3.5 mr-1" />
+                                <span className="truncate max-w-[80px]">
+                                    {selectedFolderId === "all"
+                                        ? "All"
+                                        : folders.find(
+                                              (f) => f.id === selectedFolderId,
+                                          )?.name || "Folder"}
+                                </span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Folder Filter</DropdownMenuLabel>
+                            <DropdownMenuRadioGroup
+                                value={selectedFolderId}
+                                onValueChange={(v) => onSelectFolder?.(v)}
+                            >
+                                <DropdownMenuRadioItem value="all">
+                                    All Recordings
+                                </DropdownMenuRadioItem>
+                                {folders.map((folder) => (
+                                    <DropdownMenuRadioItem
+                                        key={folder.id}
+                                        value={folder.id}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="size-2 rounded-full border border-black/10 dark:border-white/10"
+                                                style={{
+                                                    backgroundColor: `hsl(${folder.color})`,
+                                                }}
+                                            />
+                                            <span>{folder.name}</span>
+                                        </div>
+                                    </DropdownMenuRadioItem>
+                                ))}
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button

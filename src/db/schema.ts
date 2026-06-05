@@ -201,6 +201,32 @@ export const plaudDevices = pgTable(
     }),
 );
 
+// Folders
+export const folders = pgTable(
+    "folders",
+    {
+        id: text("id")
+            .primaryKey()
+            .$defaultFn(() => nanoid()),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        name: text("name").notNull(),
+        color: varchar("color", { length: 50 })
+            .notNull()
+            .default("142 36% 45%"),
+        createdAt: timestamp("created_at").notNull().defaultNow(),
+        updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    },
+    (table) => ({
+        userIdIdx: index("folders_user_id_idx").on(table.userId),
+        userFolderNameUnique: unique("folders_user_id_name_unique").on(
+            table.userId,
+            table.name,
+        ),
+    }),
+);
+
 // Recordings
 export const recordings = pgTable(
     "recordings",
@@ -211,6 +237,9 @@ export const recordings = pgTable(
         userId: text("user_id")
             .notNull()
             .references(() => users.id, { onDelete: "cascade" }),
+        folderId: text("folder_id").references(() => folders.id, {
+            onDelete: "set null",
+        }),
         deviceSn: varchar("device_sn", { length: 255 }).notNull(),
         // Unique ID from Plaud API, scoped per Riffado user.
         plaudFileId: varchar("plaud_file_id", { length: 255 }).notNull(),

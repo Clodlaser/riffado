@@ -24,6 +24,7 @@ export function RecordingRow({
     isCompact,
     rowPadding,
     dateTimeFormat,
+    folder,
     onSelect,
     onDelete,
     registerRef,
@@ -35,6 +36,7 @@ export function RecordingRow({
     isCompact: boolean;
     rowPadding: string;
     dateTimeFormat: DateTimeFormat;
+    folder?: { name: string; color: string };
     onSelect: (recording: Recording) => void;
     onDelete: (recording: Recording) => Promise<void>;
     registerRef: (id: string, el: HTMLButtonElement | null) => void;
@@ -65,6 +67,25 @@ export function RecordingRow({
                         <h3 className="truncate text-sm font-medium">
                             {recording.filename}
                         </h3>
+                        {folder && (
+                            <span
+                                className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border bg-muted/20"
+                                style={{
+                                    borderColor: `hsl(${folder.color} / 0.2)`,
+                                    color: `hsl(${folder.color})`,
+                                }}
+                            >
+                                <span
+                                    className="size-1.5 rounded-full"
+                                    style={{
+                                        backgroundColor: `hsl(${folder.color})`,
+                                    }}
+                                />
+                                <span className="truncate max-w-[80px]">
+                                    {folder.name}
+                                </span>
+                            </span>
+                        )}
                         {inFlight && (
                             <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] text-primary">
                                 <Loader2

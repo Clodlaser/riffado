@@ -244,6 +244,7 @@ export function buildDemoRecordings(now: Date): Recording[] {
         filesize: seed.filesize,
         startTime: isoMinutesAgo(now, seed.minutesAgo),
         deviceSn: seed.deviceSn,
+        folderId: null,
         hasTranscript: !!seed.transcript,
         hasSummary: !!seed.summary,
         waveformPeaks: deterministicPeaks(seed.id),

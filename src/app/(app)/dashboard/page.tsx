@@ -3,6 +3,7 @@ import { Workstation } from "@/components/dashboard/workstation";
 import { db } from "@/db";
 import {
     aiEnhancements,
+    folders,
     recordings,
     transcriptions,
     userSettings,
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
             startTime: recordings.startTime,
             filesize: recordings.filesize,
             deviceSn: recordings.deviceSn,
+            folderId: recordings.folderId,
             waveformPeaks: recordings.waveformPeaks,
         })
         .from(recordings)
@@ -98,10 +100,22 @@ export default async function DashboardPage() {
     // there is the only place callers need to touch.
     const initialSettings = initialSettingsFromRow(settingsRow);
 
+    const userFolders = await db
+        .select({
+            id: folders.id,
+            name: folders.name,
+            color: folders.color,
+            createdAt: folders.createdAt,
+        })
+        .from(folders)
+        .where(eq(folders.userId, session.user.id))
+        .orderBy(folders.name);
+
     return (
         <Workstation
             recordings={recordingsData}
             transcriptions={transcriptionMap}
+            folders={userFolders}
             isAdmin={isAdminEmail(session.user.email)}
             userEmail={session.user.email ?? null}
             initialSettings={initialSettings}

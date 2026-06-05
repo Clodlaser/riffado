@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import {
     aiEnhancements,
+    folders,
     recordings,
     transcriptions,
     webhookDeliveries,
 } from "@/db/schema";
 import { requireApiSession } from "@/lib/auth-server";
-import { decryptText } from "@/lib/encryption/fields";
+import { decryptText, encryptText } from "@/lib/encryption/fields";
 import { AppError, apiHandler, ErrorCode } from "@/lib/errors";
 import { createUserStorageProvider } from "@/lib/storage/factory";
 import { emitEvent } from "@/lib/webhooks/emit";
@@ -249,6 +250,95 @@ export const DELETE = apiHandler<IdContext>(async (request, context) => {
     if (didTombstone) {
         await emitEvent("recording.deleted", userId, id);
     }
+
+    return NextResponse.json({ success: true });
+});
+
+// PATCH - Update recording attributes (folderId, filename)
+export const PATCH = apiHandler<IdContext>(async (request, context) => {
+    const session = await requireApiSession(request);
+    const { id } = await (context as IdContext).params;
+
+    const body = await request.json().catch(() => ({}));
+    const folderId =
+        typeof body.folderId === "string" ? body.folderId : undefined;
+    const filename =
+        typeof body.filename === "string" ? body.filename.trim() : undefined;
+
+    // Check if the recording exists and belongs to the user
+    const [recording] = await db
+        .select()
+        .from(recordings)
+        .where(
+            and(
+                eq(recordings.id, id),
+                eq(recordings.userId, session.user.id),
+                isNull(recordings.deletedAt),
+            ),
+        )
+        .limit(1);
+
+    if (!recording) {
+        throw new AppError(
+            ErrorCode.RECORDING_NOT_FOUND,
+            "Recording not found",
+            404,
+        );
+    }
+
+    const updateFields: Record<string, unknown> = {
+        updatedAt: new Date(),
+    };
+
+    if (folderId !== undefined) {
+        if (folderId === null || folderId === "") {
+            updateFields.folderId = null;
+        } else {
+            // Verify the target folder belongs to the user
+            const [folder] = await db
+                .select()
+                .from(folders)
+                .where(
+                    and(
+                        eq(folders.id, folderId),
+                        eq(folders.userId, session.user.id),
+                    ),
+                )
+                .limit(1);
+
+            if (!folder) {
+                throw new AppError(
+                    ErrorCode.NOT_FOUND,
+                    "Folder not found",
+                    404,
+                );
+            }
+            updateFields.folderId = folderId;
+        }
+    }
+
+    if (filename !== undefined) {
+        if (!filename) {
+            throw new AppError(
+                ErrorCode.INVALID_INPUT,
+                "Filename cannot be empty",
+                400,
+                { field: "filename" },
+            );
+        }
+        updateFields.filename = encryptText(filename);
+    }
+
+    await db
+        .update(recordings)
+        .set(updateFields)
+        .where(
+            and(
+                eq(recordings.id, id),
+                eq(recordings.userId, session.user.id),
+                isNull(recordings.deletedAt),
+            ),
+        );
 
     return NextResponse.json({ success: true });
 });

@@ -18,6 +18,8 @@ interface Props {
     currentTranscription: TranscriptionData | undefined;
     isCurrentTranscribing: boolean;
     visibleRecordings: Recording[];
+    folders?: { id: string; name: string; color: string }[];
+    onFolderChange?: () => void;
     onTranscribe: () => void;
     onSelectRecording: (r: Recording) => void;
     onBackToList: () => void;
@@ -44,6 +46,8 @@ export function WorkstationDetailPane({
     currentTranscription,
     isCurrentTranscribing,
     visibleRecordings,
+    folders = [],
+    onFolderChange,
     onTranscribe,
     onSelectRecording,
     onBackToList,
@@ -83,6 +87,8 @@ export function WorkstationDetailPane({
                         initialVolume={initialVolume}
                         initialAutoPlayNext={initialAutoPlayNext}
                         scrubberStyle={scrubberStyle}
+                        folders={folders}
+                        onFolderChange={onFolderChange}
                         onEnded={() => {
                             const currentIndex = visibleRecordings.findIndex(
                                 (r) => r.id === currentRecording.id,
