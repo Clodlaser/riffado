@@ -28,12 +28,12 @@ export const SUMMARY_PRESETS: Record<SummaryPreset, SummaryPromptConfig> = {
     general: {
         id: "general",
         name: "General Summary",
-        description: "Concise summary of any audio transcription",
-        prompt: `Provide a concise summary of this audio transcription. Then extract key points and action items if any exist.
+        description: "Detailed summary of any audio transcription",
+        prompt: `Provide a detailed and comprehensive summary of this audio transcription. Focus on all key topics, discussions, arguments, decisions, and technical facts. Do not summarize briefly or omit key context. Then extract key points and action items if any exist.
 
 Respond in the following JSON format (no markdown, no code fences):
 {
-  "summary": "A concise paragraph summarizing the transcription",
+  "summary": "A detailed, structured, multi-paragraph summary of the transcription containing all important technical facts, contexts, and decisions.",
   "keyPoints": ["key point 1", "key point 2"],
   "actionItems": ["action item 1", "action item 2"]
 }
@@ -47,12 +47,12 @@ Transcription:
         id: "meeting-notes",
         name: "Meeting Notes",
         description:
-            "Structured meeting summary with attendees, decisions, and action items",
-        prompt: `Summarize this meeting recording. Include attendees mentioned, decisions made, and action items.
+            "Detailed meeting summary with attendees, decisions, and action items",
+        prompt: `Summarize this meeting recording in detail. Include attendees mentioned, key discussion topics, arguments, decisions made, and action items. Ensure the summary is comprehensive and captures technical specifics.
 
 Respond in the following JSON format (no markdown, no code fences):
 {
-  "summary": "A structured summary of the meeting including attendees and decisions",
+  "summary": "A detailed and structured summary of the meeting including attendees, main discussion points, and key decisions.",
   "keyPoints": ["decision 1", "decision 2", "key discussion point"],
   "actionItems": ["action item with owner if mentioned", "follow-up task"]
 }
