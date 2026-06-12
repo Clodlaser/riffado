@@ -33,7 +33,7 @@ export const SUMMARY_PRESETS: Record<SummaryPreset, SummaryPromptConfig> = {
 
 Respond in the following JSON format (no markdown, no code fences):
 {
-  "summary": "A highly detailed, multi-paragraph summary of the transcription containing all important technical facts, contexts, values, and decisions. This field must be long (at least 400-600 words) and use \\n\\n for paragraph breaks to ensure a structured, comprehensive read.",
+  "summary": "A highly detailed, multi-paragraph summary of the transcription containing all important technical facts, contexts, values, and decisions. This field must be long (at least 400-600 words) and structured into multiple paragraphs separated by line breaks to ensure a structured, comprehensive read.",
   "keyPoints": ["key point 1", "key point 2"],
   "actionItems": ["action item 1", "action item 2"]
 }
@@ -52,7 +52,7 @@ Transcription:
 
 Respond in the following JSON format (no markdown, no code fences):
 {
-  "summary": "A highly detailed, multi-paragraph meeting minutes document including attendees, main discussion points, arguments, and key decisions. This field must be long (at least 400-600 words) and use \\n\\n for paragraph breaks.",
+  "summary": "A highly detailed, multi-paragraph meeting minutes document including attendees, main discussion points, arguments, and key decisions. This field must be long (at least 400-600 words) and structured into multiple paragraphs separated by line breaks.",
   "keyPoints": ["decision 1", "decision 2", "key discussion point"],
   "actionItems": ["action item with owner if mentioned", "follow-up task"]
 }

@@ -230,7 +230,7 @@ export function TranscriptionPanel({
                                     <div className="space-y-4">
                                         {/* Summary text */}
                                         <div className="bg-muted rounded-lg p-4">
-                                            <p className="text-sm leading-relaxed">
+                                            <p className="text-sm whitespace-pre-wrap leading-relaxed">
                                                 {summaryData.summary}
                                             </p>
                                         </div>

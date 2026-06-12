@@ -259,7 +259,7 @@ export function TranscriptionSection({
                                 {summaryExpanded && (
                                     <div className="space-y-4">
                                         <div className="info-card">
-                                            <p className="leading-relaxed">
+                                            <p className="whitespace-pre-wrap leading-relaxed">
                                                 {summaryData.summary}
                                             </p>
                                         </div>
