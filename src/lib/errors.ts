@@ -76,8 +76,13 @@ export class AppError extends Error {
     }
 
     toJSON(): AppErrorJSON {
+        const errorId = this.details?.errorId;
+        const displayMessage =
+            errorId && this.message === "An unexpected error occurred"
+                ? `${this.message} (ID: ${errorId})`
+                : this.message;
         return {
-            error: this.message,
+            error: displayMessage,
             code: this.code,
             ...(this.details && { details: this.details }),
         };

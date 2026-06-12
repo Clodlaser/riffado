@@ -188,7 +188,7 @@ describe("errorResponse", () => {
                 code: string;
                 details?: { errorId?: string };
             };
-            expect(body.error).toBe("An unexpected error occurred");
+            expect(body.error).toMatch(/^An unexpected error occurred \(ID: err_[0-9a-f]{8}\)$/);
             expect(body.code).toBe(ErrorCode.INTERNAL_ERROR);
             // 5xx responses carry a correlation id; format checked in the
             // dedicated errorId describe block below.
@@ -294,7 +294,7 @@ describe("apiHandler", () => {
         const res = await handler(new Request("http://x"), undefined);
         expect(res.status).toBe(500);
         const body = await res.json();
-        expect(body.error).toBe("An unexpected error occurred");
+        expect(body.error).toMatch(/^An unexpected error occurred \(ID: err_[0-9a-f]{8}\)$/);
         expect(body.code).toBe(ErrorCode.INTERNAL_ERROR);
         expect(JSON.stringify(body)).not.toContain("hunter2");
         expect(consoleErrorSpy).toHaveBeenCalled();
