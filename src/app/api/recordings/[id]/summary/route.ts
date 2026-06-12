@@ -173,7 +173,7 @@ export const POST = apiHandler<IdContext>(async (request, context) => {
     const transcriptText = decryptText(transcription.text);
 
     // Truncate transcription if too long
-    const maxLength = 8000;
+    const maxLength = 150000;
     const truncatedTranscription =
         transcriptText.length > maxLength
             ? `${transcriptText.substring(0, maxLength)}...`
