@@ -29,11 +29,11 @@ export const SUMMARY_PRESETS: Record<SummaryPreset, SummaryPromptConfig> = {
         id: "general",
         name: "General Summary",
         description: "Detailed summary of any audio transcription",
-        prompt: `Provide a detailed and comprehensive summary of this audio transcription. Focus on all key topics, discussions, arguments, decisions, and technical facts. Do not summarize briefly or omit key context. Then extract key points and action items if any exist.
+        prompt: `Provide an extremely detailed, exhaustive, and comprehensive summary of this audio transcription. Focus on all key topics, discussions, arguments, decisions, and technical facts. Do not summarize briefly under any circumstances; instead, capture the depth and specifics of the entire conversation, including exact numbers, values, and details. Then extract key points and action items if any exist.
 
 Respond in the following JSON format (no markdown, no code fences):
 {
-  "summary": "A detailed, structured, multi-paragraph summary of the transcription containing all important technical facts, contexts, and decisions.",
+  "summary": "A highly detailed, multi-paragraph summary of the transcription containing all important technical facts, contexts, values, and decisions. This field must be long (at least 400-600 words) and use \\n\\n for paragraph breaks to ensure a structured, comprehensive read.",
   "keyPoints": ["key point 1", "key point 2"],
   "actionItems": ["action item 1", "action item 2"]
 }
@@ -48,11 +48,11 @@ Transcription:
         name: "Meeting Notes",
         description:
             "Detailed meeting summary with attendees, decisions, and action items",
-        prompt: `Summarize this meeting recording in detail. Include attendees mentioned, key discussion topics, arguments, decisions made, and action items. Ensure the summary is comprehensive and captures technical specifics.
+        prompt: `Summarize this meeting recording in extreme detail. Include attendees mentioned, key discussion topics, arguments, decisions made, and action items. Do not summarize briefly; capture the specific context, reasoning, and technical figures discussed.
 
 Respond in the following JSON format (no markdown, no code fences):
 {
-  "summary": "A detailed and structured summary of the meeting including attendees, main discussion points, and key decisions.",
+  "summary": "A highly detailed, multi-paragraph meeting minutes document including attendees, main discussion points, arguments, and key decisions. This field must be long (at least 400-600 words) and use \\n\\n for paragraph breaks.",
   "keyPoints": ["decision 1", "decision 2", "key discussion point"],
   "actionItems": ["action item with owner if mentioned", "follow-up task"]
 }
